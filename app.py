@@ -1,4 +1,4 @@
-import restcontroller 
+import restcontroller
 
 # this is to support uWSGI/nginx/apache
 app = restcontroller.fapp

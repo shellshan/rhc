@@ -2,11 +2,12 @@ from flask import abort, Response, request
 import logging
 import datetime
 from http import HTTPStatus
-from flask_restful import reqparse, Resource, fields, marshal 
+from flask_restful import reqparse, Resource, fields, marshal
 import subprocess
 import shlex
-from restcontroller.utils.commandexecutor import execute 
-from restcontroller.utils.audit import audit
+from restcontroller.lib.commandexecutor import execute
+from restcontroller.lib.audit import audit
+from restcontroller.lib.auth import verify_token
 
 output_fields = {
         'returncode': fields.Integer,
@@ -15,13 +16,12 @@ output_fields = {
         }
 
 resource_fields = {
-        'cmd': fields.String,
-        'cwd': fields.String,
         'output': fields.Nested(output_fields, allow_null=True),
         'error': fields.String,
         }
 
 class RestExecutor(Resource):
+    name = 'execute'
     def __init__(self, *args, **kwargs):
         self.logger = logging.getLogger(__name__)
         self.reqparse = reqparse.RequestParser(bundle_errors=True)
@@ -30,12 +30,18 @@ class RestExecutor(Resource):
         self.reqparse.add_argument('timeout', type = int, default=60, location = 'json')
         super().__init__(*args, **kwargs)
 
-    def post(self):
+    @verify_token
+    def post(self, username=None):
+        if username is None:
+            abort(HTTPStatus.INTERNAL_SERVER_ERROR, description='Unable to find user')
+
         args = self.reqparse.parse_args()
-        audit_list = [datetime.datetime.now(), request.remote_addr, args.cmd, args.cwd]
-        response = { 'cmd' : args.cmd, 'cwd': args.cwd }
-        out = execute(args.cmd, args.cwd, args.timeout) 
-        response.update(out)
-        audit_list.append(response.get('error') or response.get('output'))
-        audit(audit_list)
-        return marshal(response, resource_fields), 200
+        audit_list = [datetime.datetime.now(), request.remote_addr,
+                      RestExecutor.name, request.json]
+        try:
+            response = execute(args.cmd, args.cwd, args.timeout)
+        except Exceptioni as e:
+            audit(*audit_list, int(HTTPStatus.INTERNAL_SERVER_ERROR), e)
+            abort(HTTPStatus.INTERNAL_SERVER_ERROR, description=str(e))
+        audit(*audit_list, int(HTTPStatus.OK), response)
+        return marshal(response, resource_fields), HTTPStatus.OK

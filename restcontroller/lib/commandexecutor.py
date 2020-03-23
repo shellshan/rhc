@@ -3,10 +3,10 @@ import subprocess
 import shlex
 
 logger = logging.getLogger(__name__)
-        
+
 def execute(cmd, cwd, timeout):
-    cmd = shlex.split(cmd)
     try:
+        cmd = shlex.split(cmd)
         process = subprocess.run(cmd,
                      cwd=cwd,
                      timeout=timeout,
@@ -15,11 +15,11 @@ def execute(cmd, cwd, timeout):
                      #shell=True,
                      universal_newlines=True)
         return {'output': {
-                    'stdout': process.stdout,  
-                    'stderr': process.stderr, 
+                    'stdout': process.stdout,
+                    'stderr': process.stderr,
                     'returncode': process.returncode
                     }
                }
     except subprocess.TimeoutExpired:
-        return {'error': 'Timeout'} 
-    return process 
+        return {'error': 'Timeout'}
+    return process
