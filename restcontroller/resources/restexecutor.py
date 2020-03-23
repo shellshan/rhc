@@ -25,7 +25,7 @@ class RestExecutor(Resource):
         self.logger = logging.getLogger(__name__)
         self.reqparse = reqparse.RequestParser(bundle_errors=True)
         self.reqparse.add_argument('cmd', type = str, required=True, location = 'json')
-        self.reqparse.add_argument('cwd', type = str, required=True, location = 'json')
+        self.reqparse.add_argument('cwd', type = str, location = 'json')
         self.reqparse.add_argument('timeout', type = int, default=60, location = 'json')
         super().__init__(*args, **kwargs)
 
@@ -34,7 +34,7 @@ class RestExecutor(Resource):
         audit_list = [datetime.datetime.now(), request.remote_addr, g.user,
                       RestExecutor.name, request.json]
         try:
-            response = execute(args.cmd, args.cwd, args.timeout)
+            response = execute(args.cmd, args.cwd, args.timeout, g.user)
         except Exception as e:
             audit(*audit_list, int(HTTPStatus.INTERNAL_SERVER_ERROR), e)
             abort(HTTPStatus.INTERNAL_SERVER_ERROR, description=str(e))
