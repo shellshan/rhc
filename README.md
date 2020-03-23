@@ -13,6 +13,7 @@ Used to run host command through REST service.
 ## Installation
 
   Should be run under the root privilage
+  
   cd rhc
 
   python3 -m venv venv
