@@ -21,6 +21,8 @@ Used to run host command through REST service.
   source venv/bin/activate
 
   pip install -f requirements.txt
+  
+  mkdir /var/log/rhc/
 
   python app.py
 
