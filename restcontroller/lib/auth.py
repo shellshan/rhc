@@ -1,4 +1,4 @@
-from flask import request, abort
+from flask import request, abort, g
 from http import HTTPStatus
 from functools import wraps
 from simplepam import authenticate
@@ -8,26 +8,28 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def verify_token(f):
+def verify_token():
+    token = None
+    if 'x-access-tokens' in request.headers:
+       token = request.headers['x-access-tokens']
+
+    if not token:
+       abort(HTTPStatus.UNAUTHORIZED, description='Require Authentication')
+
+    try:
+       data = jwt.decode(token, 'mysecret')
+    except jwt.exceptions.ExpiredSignatureError:
+       abort(HTTPStatus.UNAUTHORIZED, description='Token Expired')
+    except:
+       abort(HTTPStatus.UNAUTHORIZED, description='Token Validation Failed')
+
+    g.user = data.get('username')
+
+def verify_token_dec(f):
    @wraps(f)
    def decorator(*args, **kwargs):
-
-      token = None
-
-      if 'x-access-tokens' in request.headers:
-         token = request.headers['x-access-tokens']
-
-      if not token:
-         abort(HTTPStatus.UNAUTHORIZED, description='Require Authentication')
-
-      try:
-         data = jwt.decode(token, 'mysecret')
-      except jwt.exceptions.ExpiredSignatureError:
-         abort(HTTPStatus.UNAUTHORIZED, description='Token Expired')
-      except:
-         abort(HTTPStatus.UNAUTHORIZED, description='Token Validation Failed')
-
-      return f(*args, **kwargs, username=data.get('username'))
+       verify_token()
+       return f(*args, **kwargs)
    return decorator
 
 def auth(username, password):

@@ -12,4 +12,5 @@ logger = logging.getLogger(__name__)
 fapp = Flask(__name__)
 fapi = Api(fapp)
 
+import restcontroller.lib.common
 from restcontroller import apis

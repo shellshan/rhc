@@ -1,4 +1,4 @@
-from flask import abort, Response, request
+from flask import abort, Response, request, g
 import logging
 import datetime
 from http import HTTPStatus
@@ -7,7 +7,6 @@ import subprocess
 import shlex
 from restcontroller.lib.commandexecutor import execute
 from restcontroller.lib.audit import audit
-from restcontroller.lib.auth import verify_token
 
 output_fields = {
         'returncode': fields.Integer,
@@ -30,17 +29,13 @@ class RestExecutor(Resource):
         self.reqparse.add_argument('timeout', type = int, default=60, location = 'json')
         super().__init__(*args, **kwargs)
 
-    @verify_token
-    def post(self, username=None):
-        if username is None:
-            abort(HTTPStatus.INTERNAL_SERVER_ERROR, description='Unable to find user')
-
+    def post(self):
         args = self.reqparse.parse_args()
-        audit_list = [datetime.datetime.now(), request.remote_addr,
+        audit_list = [datetime.datetime.now(), request.remote_addr, g.user,
                       RestExecutor.name, request.json]
         try:
             response = execute(args.cmd, args.cwd, args.timeout)
-        except Exceptioni as e:
+        except Exception as e:
             audit(*audit_list, int(HTTPStatus.INTERNAL_SERVER_ERROR), e)
             abort(HTTPStatus.INTERNAL_SERVER_ERROR, description=str(e))
         audit(*audit_list, int(HTTPStatus.OK), response)
