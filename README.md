@@ -6,13 +6,16 @@ Used to run host command through REST service.
 
 ## Required
 
-  Any Linux Distribution
+  Any Linux/Unix Distribution
 	
-  Python3.x
+  Python3.5 and above
 
 ## Installation
 
-  Should be run under the root privilage
+  **Service should run under the root privilage**
+  
+  ```
+  # clone the repo
   
   cd rhc
 
@@ -20,17 +23,20 @@ Used to run host command through REST service.
 
   source venv/bin/activate
 
-  pip install -f requirements.txt
+  pip install -r requirements.txt
   
   mkdir /var/log/rhc/
 
   python app.py
+  ```
 
 ## API
 
 ### Auth
 
 > URL : http://localhost:5000/api/v1/auth
+
+> Headers : Content-Type: application/json
 
 > Payload : {"username": "xxx", "password": "yyy"}
 
@@ -44,6 +50,8 @@ Used to run host command through REST service.
 ### Execute
 
 > URL : http://localhost:5000/api/v1/execute
+
+> Headers : Content-Type: application/json, x-access-tokens: >valid token from auth<
 
 > Payload : {"cmd": "ls -lhrt"}
 
