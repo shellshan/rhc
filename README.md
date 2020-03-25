@@ -38,7 +38,7 @@ Used to run host command through REST service.
 
 > Headers : Content-Type: application/json
 
-> Payload : {"username": "xxx", "password": "yyy"}
+> Payload : {"username": "xxx", "password": "yyy"} #Note: Use system(where RHC deployed) username/password
 
 > Response : 
 
