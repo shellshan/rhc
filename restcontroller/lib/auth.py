@@ -1,7 +1,7 @@
 from flask import request, abort, g
 from http import HTTPStatus
 from functools import wraps
-from simplepam import authenticate
+import pam
 import jwt
 import datetime
 import logging
@@ -33,7 +33,8 @@ def verify_token_dec(f):
    return decorator
 
 def auth(username, password):
-    auth = authenticate(username, password)
+    pam_obj = pam.pam()
+    auth = pam_obj.authenticate(username, password)
     if auth:
         token = jwt.encode({'username': username, 'exp' :
                             datetime.datetime.utcnow() +
@@ -42,4 +43,4 @@ def auth(username, password):
                             'mysecret')
         return {'token': token.decode('UTF-8')}
     else:
-        abort(HTTPStatus.UNAUTHORIZED, description='Authendication Failed')
+        abort(HTTPStatus.UNAUTHORIZED, description='{} {}'.format(pam_obj.code, pam_obj.reason))
