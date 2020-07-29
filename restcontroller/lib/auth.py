@@ -32,15 +32,17 @@ def verify_token_dec(f):
        return f(*args, **kwargs)
    return decorator
 
-def auth(username, password):
+def auth(username, password, jwt_token=False):
     pam_obj = pam.pam()
     auth = pam_obj.authenticate(username, password)
     if auth:
-        token = jwt.encode({'username': username, 'exp' :
-                            datetime.datetime.utcnow() +
-                            datetime.timedelta(minutes=30),
-                            'iat': datetime.datetime.utcnow()},
-                            'mysecret')
-        return {'token': token.decode('UTF-8')}
+        if jwt_token:
+            token = jwt.encode({'username': username, 'exp' :
+                                datetime.datetime.utcnow() +
+                                datetime.timedelta(minutes=30),
+                                'iat': datetime.datetime.utcnow()},
+                                'mysecret')
+            return {'token': token.decode('UTF-8')}
+        return True
     else:
         abort(HTTPStatus.UNAUTHORIZED, description='{} {}'.format(pam_obj.code, pam_obj.reason))

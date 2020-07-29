@@ -26,6 +26,6 @@ class Authenticator(Resource):
         audit_list = [datetime.datetime.now(), request.remote_addr,
                       Authenticator.name,
                       args.username]
-        response = auth(args.username, args.password)
+        response = auth(args.username, args.password, jwt_token=True)
         audit(*audit_list , int(HTTPStatus.OK))
         return marshal(response, resource_fields), HTTPStatus.OK
